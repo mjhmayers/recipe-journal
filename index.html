@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mise en Place">
+<meta name="theme-color" content="#0f0c09">
+<title>Mise en Place</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0c09; --bg2: #1a1510; --bg3: #120f0c; --bg4: #1e1a17;
+    --border: #2a2018; --border2: #3a3020; --border3: #2e2620;
+    --text: #e0d0b8; --text2: #c0a880; --text3: #9a8a7a; --text4: #7a6a5a; --text5: #5a4a3a;
+    --accent: #d4a060; --accent2: #6a4828; --accent3: #c4a070;
+    --green: #2a5a28; --green2: #90d080; --green3: #1a2a18; --green4: #3a6030;
+    --red: #5a2a20; --red2: #e09080;
+    --gold: #e8a020;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+  body { background: linear-gradient(160deg, #0f0c09 0%, #130e0a 50%, #0e0b08 100%); min-height: 100vh; }
+
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── Layout ── */
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Header ── */
+  #header {
+    position: sticky; top: 0; z-index: 50;
+    background: linear-gradient(to bottom, rgba(13,10,7,0.98), rgba(13,10,7,0.9));
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #1e1a14; padding: 16px 20px 0;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .brand-title { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--accent); letter-spacing: -0.5px; }
+  .brand-sub { font-size: 10px; color: var(--text5); letter-spacing: 2px; text-transform: uppercase; }
+  .header-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; border-bottom: 1px solid #1e1a14; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { background: none; border: none; padding: 10px 16px; cursor: pointer; color: var(--text5);
+    border-bottom: 2px solid transparent; margin-bottom: -1px; font-size: 13px; font-family: inherit;
+    white-space: nowrap; transition: color 0.15s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Main content ── */
+  #main { flex: 1; padding: 20px; max-width: 960px; margin: 0 auto; width: 100%; }
+
+  /* ── Buttons ── */
+  .btn { padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; border: none; transition: all 0.15s; white-space: nowrap; }
+  .btn-primary { background: var(--accent2); color: #f0e0c8; }
+  .btn-primary:hover { background: #7a5030; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border2); color: #a09080; }
+  .btn-secondary:hover { border-color: #6a5040; color: var(--text); }
+  .btn-ghost { background: transparent; border: none; color: #a09080; }
+  .btn-accent { background: var(--green); color: #c8f0c0; }
+  .btn-accent:hover { background: #3a6a38; }
+  .btn-danger { background: var(--red); color: #f8d0c8; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* ── Search/filter bar ── */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar input, .filter-bar select {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; color: var(--text); font-size: 13px; font-family: inherit; outline: none;
+  }
+  .filter-bar input { flex: 1; min-width: 140px; }
+  .filter-bar select { min-width: 120px; }
+
+  /* ── Recipe grid ── */
+  .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  @media (max-width: 600px) { .recipe-grid { grid-template-columns: 1fr; } }
+
+  /* ── Recipe card ── */
+  .recipe-card {
+    background: linear-gradient(145deg, var(--bg4), #181410);
+    border: 1px solid var(--border3); border-radius: 12px; padding: 16px 18px;
+    cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; animation: fadeUp 0.3s ease;
+  }
+  .recipe-card:hover, .recipe-card:active { border-color: #6a5040; transform: translateY(-2px); }
+  .card-glow { position: absolute; top: 0; right: 0; width: 60px; height: 60px;
+    background: radial-gradient(circle at top right, #3a2a1a, transparent); border-radius: 0 12px 0 0; pointer-events: none; }
+  .card-name { font-family: 'Playfair Display', serif; font-size: 16px; color: #e8d8c0; line-height: 1.3; margin-bottom: 3px; }
+  .card-meta { font-size: 11px; color: var(--text4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card-note { font-size: 12px; color: var(--text3); font-style: italic; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; }
+  .card-stats { font-size: 11px; color: var(--text5); text-align: right; }
+
+  /* ── Stars ── */
+  .stars { display: flex; gap: 3px; }
+  .star { font-size: 15px; cursor: pointer; color: #3a3530; transition: color 0.1s; line-height: 1; }
+  .star.filled { color: var(--gold); }
+  .star.lg { font-size: 22px; }
+  .star.readonly { cursor: default; }
+
+  /* ── Tags ── */
+  .tags-row { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tag { background: #2a2420; border: 1px solid #4a3f35; border-radius: 20px; padding: 2px 9px;
+    font-size: 11px; color: #c4aa88; display: inline-flex; align-items: center; gap: 4px; }
+  .tag-remove { cursor: pointer; color: var(--text4); font-size: 14px; line-height: 1; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 100;
+    display: flex; align-items: flex-end; justify-content: center; padding: 0;
+  }
+  @media (min-width: 600px) { .modal-overlay { align-items: center; padding: 20px; } }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 20px 20px 0 0; width: 100%; max-width: 660px;
+    max-height: 92vh; overflow-y: auto; padding: 24px 20px;
+    animation: fadeUp 0.25s ease;
+  }
+  @media (min-width: 600px) { .modal { border-radius: 16px; padding: 28px; } }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #e8d0a0; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--text4); margin-bottom: 20px; line-height: 1.6; }
+
+  /* ── Form fields ── */
+  .field { margin-bottom: 14px; }
+  .field-label { font-size: 11px; color: var(--text4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px;
+    font-family: inherit; outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #6a5040; }
+  .field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+
+  /* ── Stat boxes ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+  @media (max-width: 500px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-box { background: var(--bg3); border-radius: 10px; padding: 12px; border: 1px solid var(--border); text-align: center; }
+  .stat-val { font-size: 20px; color: var(--accent3); font-family: 'Playfair Display', serif; }
+  .stat-label { font-size: 10px; color: var(--text5); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  /* ── Detail sections ── */
+  .detail-section { margin-bottom: 16px; }
+  .detail-label { font-size: 11px; color: var(--text4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .detail-box { background: var(--bg3); border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+  .detail-box p { font-size: 14px; color: #c0b09a; line-height: 1.6; }
+  .ingredient-line { font-size: 13px; color: #c0b09a; line-height: 1.9; display: flex; gap: 8px; }
+  .ingredient-line::before { content: "◆"; color: var(--text5); font-size: 8px; flex-shrink: 0; margin-top: 5px; }
+  .instruction-line { font-size: 13px; color: #c0b09a; line-height: 1.7; display: flex; gap: 10px; margin-bottom: 6px; }
+  .instruction-num { color: var(--accent2); font-size: 11px; font-weight: 600; flex-shrink: 0; min-width: 18px; }
+
+  /* ── Progress bar ── */
+  .progress-bar { background: var(--bg2); border-radius: 20px; height: 6px; overflow: hidden; }
+  .progress-fill { background: var(--accent2); height: 100%; border-radius: 20px; transition: width 0.3s; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--green3); border: 1px solid var(--green4); border-radius: 10px;
+    padding: 10px 20px; color: var(--green2); font-size: 13px; z-index: 200;
+    animation: slideDown 0.3s ease; white-space: nowrap; pointer-events: none;
+  }
+
+  /* ── Loading spinner ── */
+  .spinner { font-size: 24px; display: inline-block; animation: spin 1.2s linear infinite; }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 50px 20px; color: var(--text5); }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+  /* ── Drag zone ── */
+  .drop-zone { border: 2px dashed var(--border2); border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; color: var(--text4); transition: border-color 0.2s; }
+  .drop-zone:hover { border-color: #6a5040; }
+
+  /* ── Confirm bar ── */
+  .confirm-bar { background: #2a1510; border: 1px solid var(--red); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .confirm-bar p { font-size: 13px; color: var(--red2); }
+
+  /* ── Sync indicator ── */
+  #sync-bar { font-size: 11px; color: var(--text5); text-align: center; padding: 4px; }
+
+  /* ── Import option cards ── */
+  .import-opt { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; }
+  .import-opt:hover { border-color: #6a5040; background: var(--bg2); }
+  .import-opt-icon { font-size: 24px; line-height: 1; margin-top: 2px; flex-shrink: 0; }
+  .import-opt-title { font-size: 14px; color: #d4c0a0; font-family: 'Playfair Display', serif; }
+  .import-opt-desc { font-size: 12px; color: #6a5a4a; line-height: 1.5; margin-top: 3px; }
+  .badge { font-size: 10px; background: var(--border); color: #8a7a5a; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: 1px; margin-left: 6px; }
+
+  /* ── Result preview ── */
+  .result-preview { background: #121a10; border: 1px solid #2a4020; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .result-found { font-size: 11px; color: #5a8a5a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .result-name { font-family: 'Playfair Display', serif; font-size: 17px; color: #c8e0a0; margin-bottom: 4px; }
+  .result-meta { font-size: 12px; color: #6a8a6a; margin-bottom: 8px; }
+
+  /* ── Bookmark list ── */
+  .bookmark-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #1e1a14; cursor: pointer; transition: background 0.1s; }
+  .bookmark-item:hover { background: var(--bg2); }
+  .bookmark-item.selected { background: #1e1a14; }
+  .bm-check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid #4a3a2a; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 2px; transition: background 0.1s; }
+  .bm-check.on { background: var(--accent2); }
+  .bm-title { font-size: 13px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bm-url { font-size: 11px; color: var(--text5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="header-top">
+      <div>
+        <div class="brand-title">Mise en Place</div>
+        <div class="brand-sub">Recipe Journal</div>
+      </div>
+      <div class="header-btns">
+        <button class="btn btn-ghost btn-sm" onclick="exportJSON()">⬆ Export</button>
+        <button class="btn btn-secondary btn-sm" onclick="openImport()">⬇ Import</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddForm()">+ Add</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="collection" onclick="switchTab(this)">Collection</button>
+      <button class="tab" data-tab="stats" onclick="switchTab(this)">Stats</button>
+      <button class="tab" data-tab="ai" onclick="switchTab(this)">✦ Suggestions</button>
+    </div>
+  </div>
+  <div id="sync-bar">Loading recipes…</div>
+  <div id="main"></div>
+</div>
+
+<div id="modal-container"></div>
+<div id="toast" style="display:none"></div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcGduujfKiWp28q1rCIAOhaatWAZlcCVgSKDzbyEaIL7JdoMFLXDPz5Opu7OUtg0wZfA/exec";
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+const CUISINES = ["American","Italian","Mexican","Asian","Middle Eastern","French","Indian","Mediterranean","Other"];
+const DIFFICULTIES = ["Easy","Medium","Hard"];
+const RECIPE_KEYWORDS = ["recipe","cook","bake","food","dish","meal","kitchen","ingredient","chef","dinner","lunch","breakfast","dessert","soup","salad","pasta","bread","cake","grill","roast","sauce","allrecipes","seriouseats","epicurious","foodnetwork","bonappetit","tasty","delish","simplyrecipes","minimalistbaker","smittenkitchen","food52","thekitchn"];
+
+let recipes = [];
+let currentTab = "collection";
+let searchVal = "", filterCuisine = "All", filterRating = 0;
+let saving = false;
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+
+async function loadRecipes() {
+  setSyncBar("Syncing with Google Sheets…");
+  try {
+    const res = await fetch(SCRIPT_URL);
+    const data = await res.json();
+    recipes = Array.isArray(data) ? data : [];
+    setSyncBar(recipes.length ? `${recipes.length} recipes · synced` : "No recipes yet");
+  } catch(e) {
+    setSyncBar("⚠ Couldn't connect to Google Sheets");
+    recipes = [];
+  }
+  renderTab();
+}
+
+async function saveRecipes() {
+  if (saving) return;
+  saving = true;
+  setSyncBar("Saving…");
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "save_all", recipes }),
+    });
+    setSyncBar(`${recipes.length} recipes · saved`);
+  } catch(e) {
+    setSyncBar("⚠ Save failed — check connection");
+  }
+  saving = false;
+}
+
+function setSyncBar(msg) {
+  document.getElementById("sync-bar").textContent = msg;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.display = "none"; }, 3000);
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+function switchTab(el) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  currentTab = el.dataset.tab;
+  renderTab();
+}
+
+function renderTab() {
+  const main = document.getElementById("main");
+  if (currentTab === "collection") main.innerHTML = renderCollection();
+  else if (currentTab === "stats") main.innerHTML = renderStats();
+  else if (currentTab === "ai") { main.innerHTML = renderAIPage(); }
+}
+
+// ── Collection ────────────────────────────────────────────────────────────────
+
+function renderCollection() {
+  const filtered = recipes.filter(r => {
+    const s = !searchVal || r.name?.toLowerCase().includes(searchVal) ||
+      r.cuisine?.toLowerCase().includes(searchVal) ||
+      (r.tags||[]).some(t => t.includes(searchVal));
+    return s && (filterCuisine === "All" || r.cuisine === filterCuisine) &&
+      (filterRating === 0 || r.rating >= filterRating);
+  });
+
+  return `
+    <div class="filter-bar">
+      <input type="text" placeholder="Search recipes, cuisines, tags…" value="${searchVal}"
+        oninput="searchVal=this.value.toLowerCase();renderTab()" />
+      <select onchange="filterCuisine=this.value;renderTab()">
+        <option value="All" ${filterCuisine==="All"?"selected":""}>All Cuisines</option>
+        ${CUISINES.map(c=>`<option value="${c}" ${filterCuisine===c?"selected":""}>${c}</option>`).join("")}
+      </select>
+      <select onchange="filterRating=+this.value;renderTab()">
+        <option value="0" ${filterRating===0?"selected":""}>Any Rating</option>
+        ${[5,4,3,2,1].map(n=>`<option value="${n}" ${filterRating===n?"selected":""}>${n}★ & up</option>`).join("")}
+      </select>
+    </div>
+    <div style="font-size:11px;color:var(--text5);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">
+      ${filtered.length} recipe${filtered.length!==1?"s":""}
+    </div>
+    <div class="recipe-grid">
+      ${filtered.length ? filtered.map(r => recipeCard(r)).join("") :
+        `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🍽️</div>No recipes match your filters.</div>`}
+    </div>`;
+}
+
+function recipeCard(r) {
+  const daysSince = r.lastUsed ? Math.floor((Date.now()-new Date(r.lastUsed))/86400000) : null;
+  const tags = (r.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("");
+  const uncooked = !r.useCount && r.source==="url" ? `<span class="tag">saved</span>` : "";
+  return `
+    <div class="recipe-card" onclick='openDetail(${JSON.stringify(r.id)})'>
+      <div class="card-glow"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="flex:1;min-width:0;padding-right:8px">
+          <div class="card-name">${esc(r.name)}</div>
+          <div class="card-meta">${esc(r.cuisine||"—")} · ${r.cookTime?r.cookTime+"min":"—"} · ${esc(r.difficulty||"—")}</div>
+        </div>
+        ${r.rating>0 ? starsHTML(r.rating,true) : `<span style="font-size:11px;color:#3a2a18">unrated</span>`}
+      </div>
+      ${r.notes ? `<div class="card-note">"${esc(r.notes.substring(0,60))}${r.notes.length>60?"…":""}"</div>` : ""}
+      <div class="card-footer">
+        <div class="tags-row">${tags}${uncooked}</div>
+        <div class="card-stats">
+          ${r.useCount>0?`<div>🍴 ${r.useCount}× made</div>`:""}
+          ${daysSince!==null&&daysSince>=0?`<div>${daysSince===0?"today":daysSince+"d ago"}</div>`:""}
+        </div>
+      </div>
+    </div>`;
+}
+
+function starsHTML(val, readonly, id) {
+  return `<div class="stars">${[1,2,3,4,5].map(s =>
+    `<span class="star${s<=val?" filled":""}${readonly?" readonly":""}" 
+      ${!readonly&&id?`onclick="setRating('${id}',${s})"`:""}>★</span>`
+  ).join("")}</div>`;
+}
+
+// ── Recipe Detail ─────────────────────────────────────────────────────────────
+
+function openDetail(id) {
+  const r = recipes.find(x => x.id == id);
+  if (!r) return;
+  const daysSince = r.lastUsed ? Math.floor((Date.now()-new Date(r.lastUsed))/86400000) : null;
+
+  const ingredientLines = (r.ingredients||"").split("\n").filter(l=>l.trim())
+    .map(l=>`<div class="ingredient-line">${esc(l.trim())}</div>`).join("");
+  const instructionLines = (r.instructions||"").split("\n").filter(l=>l.trim())
+    .map((l,i)=>`<div class="instruction-line"><span class="instruction-num">${i+1}.</span><span>${esc(l.replace(/^\d+[\.\)]\s*/,"").trim())}</span></div>`).join("");
+
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Playfair Display',serif;font-size:22px;color:#e8d0a0;margin-bottom:5px;line-height:1.3">${esc(r.name)}</div>
+        <div style="font-size:12px;color:var(--text4);text-transform:uppercase;letter-spacing:1px">
+          ${esc(r.cuisine||"—")} · ${r.cookTime||"?"} min · ${esc(r.difficulty||"—")}
+        </div>
+      </div>
+      ${r.rating>0 ? starsHTML(r.rating,true) : `<span style="font-size:12px;color:var(--text5)">Unrated</span>`}
+    </div>
+
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+      ${[
+        {label:"Times Made", val: r.useCount>0?r.useCount+"×":"Not yet"},
+        {label:"Last Made", val: !r.lastUsed?"Never":daysSince===0?"Today":daysSince===1?"Yesterday":daysSince+"d ago"},
+        {label:"Added", val: new Date(r.dateAdded).toLocaleDateString("en-US",{month:"short",year:"numeric"})},
+      ].map(s=>`<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join("")}
+    </div>
+
+    ${ingredientLines ? `<div class="detail-section"><div class="detail-label">Ingredients</div><div class="detail-box">${ingredientLines}</div></div>` : ""}
+    ${instructionLines ? `<div class="detail-section"><div class="detail-label">Instructions</div><div class="detail-box">${instructionLines}</div></div>` : ""}
+    ${r.notes ? `<div class="detail-section"><div class="detail-label">Notes & Tips</div><div class="detail-box"><p>${esc(r.notes)}</p></div></div>` : ""}
+    ${r.tweaks ? `<div class="detail-section"><div class="detail-label">Tweaks & Variations</div><div class="detail-box"><p style="font-style:italic">${esc(r.tweaks)}</p></div></div>` : ""}
+    ${(r.tags||[]).length>0 ? `<div class="tags-row" style="margin-bottom:18px">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
+    ${r.sourceUrl ? `<a href="${esc(r.sourceUrl)}" target="_blank" style="display:block;font-size:12px;color:#8a7a6a;margin-bottom:16px;text-decoration:underline">View original source ↗</a>` : ""}
+
+    <div id="detail-footer">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost btn-sm" style="color:var(--text5)" onclick="confirmDeleteRecipe('${r.id}')">🗑 Delete</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+          <button class="btn btn-secondary btn-sm" onclick="markUsed('${r.id}')">✓ Made Today</button>
+          <button class="btn btn-primary btn-sm" onclick="closeModal();openEditForm('${r.id}')">Edit</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+function confirmDeleteRecipe(id) {
+  const r = recipes.find(x => x.id == id);
+  document.getElementById("detail-footer").innerHTML = `
+    <div class="confirm-bar" style="margin-top:16px">
+      <p>Delete "${esc(r.name)}"? This can't be undone.</p>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn-secondary btn-sm" onclick="openDetail('${id}')">Cancel</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRecipe('${id}')">Delete</button>
+      </div>
+    </div>`;
+}
+
+function deleteRecipe(id) {
+  const r = recipes.find(x => x.id == id);
+  recipes = recipes.filter(x => x.id != id);
+  closeModal(); renderTab(); saveRecipes();
+  showToast(`✓ "${r?.name}" deleted`);
+}
+
+function markUsed(id) {
+  const today = new Date().toISOString().split("T")[0];
+  const r = recipes.find(x => x.id == id);
+  if (!r) return;
+  r.lastUsed = today; r.useCount = (r.useCount||0) + 1;
+  saveRecipes(); renderTab(); closeModal();
+  showToast("✓ Marked as made today");
+}
+
+// ── Add / Edit Form ───────────────────────────────────────────────────────────
+
+function openAddForm(prefill) {
+  const r = prefill || {
+    id: Date.now().toString(), name:"", cuisine:"American", cookTime:30, difficulty:"Easy",
+    rating:0, ingredients:"", instructions:"", notes:"", tweaks:"",
+    source:"manual", sourceUrl:"", lastUsed:"", useCount:0, tags:[],
+    dateAdded: new Date().toISOString().split("T")[0]
+  };
+  renderRecipeForm(r, false);
+}
+
+function openEditForm(id) {
+  const r = recipes.find(x => x.id == id);
+  if (r) renderRecipeForm({...r}, true);
+}
+
+function renderRecipeForm(r, isEdit) {
+  const tagsJson = JSON.stringify(r.tags||[]);
+  showModal(`
+    <div class="modal-title">${isEdit?"Edit Recipe":"Add Recipe"}</div>
+    <div class="field">
+      <div class="field-label">Recipe Name</div>
+      <input id="f-name" type="text" value="${esc(r.name||"")}" placeholder="e.g. Lemon Herb Chicken" />
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <div class="field-label">Cuisine</div>
+        <select id="f-cuisine">${CUISINES.map(c=>`<option value="${c}" ${r.cuisine===c?"selected":""}>${c}</option>`).join("")}</select>
+      </div>
+      <div class="field">
+        <div class="field-label">Difficulty</div>
+        <select id="f-diff">${DIFFICULTIES.map(d=>`<option value="${d}" ${r.difficulty===d?"selected":""}>${d}</option>`).join("")}</select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <div class="field-label">Cook Time (min)</div>
+        <input id="f-time" type="number" value="${r.cookTime||30}" />
+      </div>
+      <div class="field">
+        <div class="field-label">Source URL</div>
+        <input id="f-url" type="text" value="${esc(r.sourceUrl||"")}" placeholder="https://…" />
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Rating</div>
+      <div class="stars" id="form-stars">
+        ${[1,2,3,4,5].map(s=>`<span class="star lg${s<=(r.rating||0)?" filled":""}" onclick="setFormRating(${s})"">★</span>`).join("")}
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Ingredients</div>
+      <textarea id="f-ingr" style="min-height:120px;font-family:monospace;font-size:13px" placeholder="2 cups flour&#10;1 tsp salt&#10;3 cloves garlic…">${esc(r.ingredients||"")}</textarea>
+    </div>
+    <div class="field">
+      <div class="field-label">Instructions</div>
+      <textarea id="f-inst" style="min-height:150px" placeholder="1. Preheat oven…&#10;2. Mix dry ingredients…">${esc(r.instructions||"")}</textarea>
+    </div>
+    <div class="field">
+      <div class="field-label">Notes & Tips</div>
+      <textarea id="f-notes" placeholder="Key tips, what works well…">${esc(r.notes||"")}</textarea>
+    </div>
+    <div class="field">
+      <div class="field-label">Tweaks & Variations</div>
+      <textarea id="f-tweaks" placeholder="Substitutions, changes you made…">${esc(r.tweaks||"")}</textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <div class="field-label">Last Made</div>
+        <input id="f-last" type="date" value="${r.lastUsed||""}" />
+      </div>
+      <div class="field">
+        <div class="field-label">Times Made</div>
+        <input id="f-count" type="number" value="${r.useCount||0}" />
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">Tags</div>
+      <div class="tags-row" id="form-tags" style="margin-bottom:8px">
+        ${(r.tags||[]).map(t=>`<span class="tag">${esc(t)}<span class="tag-remove" onclick="removeFormTag('${t}')">×</span></span>`).join("")}
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="tag-input" type="text" placeholder="Add tag…" onkeydown="if(event.key==='Enter'){event.preventDefault();addFormTag()}" style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;font-family:inherit" />
+        <button class="btn btn-secondary btn-sm" onclick="addFormTag()">Add</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFormRecipe('${r.id}','${r.dateAdded||new Date().toISOString().split("T")[0]}',${isEdit})">Save Recipe</button>
+    </div>`,
+    true // wide
+  );
+  window._formRating = r.rating||0;
+  window._formTags = [...(r.tags||[])];
+}
+
+function setFormRating(n) {
+  window._formRating = n;
+  document.querySelectorAll("#form-stars .star").forEach((s,i) => {
+    s.classList.toggle("filled", i < n);
+  });
+}
+
+function addFormTag() {
+  const inp = document.getElementById("tag-input");
+  const t = inp.value.trim().toLowerCase();
+  if (!t || window._formTags.includes(t)) { inp.value=""; return; }
+  window._formTags.push(t);
+  inp.value = "";
+  refreshFormTags();
+}
+
+function removeFormTag(t) {
+  window._formTags = window._formTags.filter(x => x !== t);
+  refreshFormTags();
+}
+
+function refreshFormTags() {
+  document.getElementById("form-tags").innerHTML =
+    window._formTags.map(t=>`<span class="tag">${esc(t)}<span class="tag-remove" onclick="removeFormTag('${t}')">×</span></span>`).join("");
+}
+
+function saveFormRecipe(id, dateAdded, isEdit) {
+  const r = {
+    id, dateAdded,
+    name: document.getElementById("f-name").value.trim(),
+    cuisine: document.getElementById("f-cuisine").value,
+    difficulty: document.getElementById("f-diff").value,
+    cookTime: parseInt(document.getElementById("f-time").value)||0,
+    sourceUrl: document.getElementById("f-url").value.trim(),
+    rating: window._formRating||0,
+    ingredients: document.getElementById("f-ingr").value.trim(),
+    instructions: document.getElementById("f-inst").value.trim(),
+    notes: document.getElementById("f-notes").value.trim(),
+    tweaks: document.getElementById("f-tweaks").value.trim(),
+    lastUsed: document.getElementById("f-last").value,
+    useCount: parseInt(document.getElementById("f-count").value)||0,
+    tags: window._formTags||[],
+    source: isEdit ? (recipes.find(x=>x.id==id)?.source||"manual") : "manual",
+  };
+  if (!r.name) { alert("Please enter a recipe name."); return; }
+  if (isEdit) { recipes = recipes.map(x => x.id==id ? r : x); }
+  else { recipes.push(r); }
+  closeModal(); renderTab(); saveRecipes();
+  showToast(isEdit ? "✓ Recipe updated" : "✓ Recipe added");
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+
+function renderStats() {
+  if (!recipes.length) return `<div class="empty"><div class="empty-icon">📊</div>No recipes yet.</div>`;
+  const rated = recipes.filter(r=>r.rating>0);
+  const avg = rated.length ? (rated.reduce((s,r)=>s+r.rating,0)/rated.length).toFixed(1) : "—";
+  const topRated = [...rated].sort((a,b)=>b.rating-a.rating).slice(0,3);
+  const mostMade = [...recipes].filter(r=>r.useCount>0).sort((a,b)=>b.useCount-a.useCount).slice(0,3);
+  const recent = [...recipes].filter(r=>r.lastUsed).sort((a,b)=>new Date(b.lastUsed)-new Date(a.lastUsed)).slice(0,3);
+  const cuisineCounts = recipes.reduce((a,r)=>{a[r.cuisine]=(a[r.cuisine]||0)+1;return a;},{});
+  const topCuisine = Object.entries(cuisineCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  const listHTML = (items, keyFn) => items.length===0
+    ? `<div style="font-size:12px;color:#3a2a1a">None yet</div>`
+    : items.map(r=>`
+        <div onclick='openDetail(${JSON.stringify(r.id)})' style="display:flex;justify-content:space-between;background:var(--bg3);border-radius:8px;padding:8px 12px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer">
+          <div style="font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(r.name)}</div>
+          <div style="font-size:12px;color:var(--text4);margin-left:8px;white-space:nowrap">${keyFn(r)}</div>
+        </div>`).join("");
+
+  return `
+    <div class="stat-grid">
+      ${[
+        {label:"Recipes",val:recipes.length},
+        {label:"Avg Rating",val:avg==="—"?"—":avg+"★"},
+        {label:"Total Cooks",val:recipes.reduce((s,r)=>s+r.useCount,0)},
+        {label:"Top Cuisine",val:topCuisine?.[0]||"—"},
+      ].map(s=>`<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join("")}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
+      ${[
+        {title:"Top Rated", items:topRated, key:r=>`★${r.rating}`},
+        {title:"Most Made", items:mostMade, key:r=>`${r.useCount}×`},
+        {title:"Recently Used", items:recent, key:r=>new Date(r.lastUsed).toLocaleDateString("en-US",{month:"short",day:"numeric"})},
+      ].map(s=>`
+        <div>
+          <div style="font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${s.title}</div>
+          ${listHTML(s.items, s.key)}
+        </div>`).join("")}
+    </div>`;
+}
+
+// ── AI Suggestions ────────────────────────────────────────────────────────────
+
+function renderAIPage() {
+  const rated = recipes.filter(r=>r.rating>0);
+  if (rated.length < 2) return `<div class="empty"><div class="empty-icon">🍽️</div>Rate at least 2 recipes to get suggestions.</div>`;
+  return `
+    <div style="text-align:center;padding:40px 20px" id="ai-container">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--accent3);margin-bottom:8px">Taste-Based Recommendations</div>
+      <div style="color:var(--text4);font-size:13px;margin-bottom:20px">Based on your ${recipes.length} recipes and cooking patterns.</div>
+      <button class="btn btn-primary" onclick="getAISuggestions()">✦ Generate Suggestions</button>
+    </div>`;
+}
+
+async function getAISuggestions() {
+  document.getElementById("ai-container").innerHTML = `<div style="padding:30px;color:var(--text4)"><span class="spinner">✦</span><div style="margin-top:10px">Analyzing your tastes…</div></div>`;
+  const top = [...recipes].filter(r=>r.rating>0).sort((a,b)=>b.rating-a.rating).slice(0,8);
+  const summary = top.map(r=>`"${r.name}" (${r.cuisine}, rated ${r.rating}/5, made ${r.useCount}×)`).join("\n");
+  try {
+    const res = await fetch(ANTHROPIC_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:1000,
+        system:`You are a culinary advisor. Suggest 4 recipes the user would love. Respond ONLY with valid JSON:
+{"recommendations":[{"name":"string","cuisine":"string","why":"string","cookTime":number,"difficulty":"Easy|Medium|Hard","keyIngredients":["string"]}]}`,
+        messages:[{role:"user",content:`My top recipes:\n${summary}\n\nSuggest 4 new recipes.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"";
+    const recs = JSON.parse(text.replace(/```json|```/g,"").trim()).recommendations;
+    document.getElementById("ai-container").innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--accent3)">Suggested for You</div>
+        <button class="btn btn-ghost btn-sm" onclick="getAISuggestions()">↺ Refresh</button>
+      </div>
+      ${recs.map(r=>`
+        <div style="background:linear-gradient(135deg,#1a1510,#151210);border:1px solid #2e2420;border-radius:12px;padding:16px 18px;margin-bottom:10px;text-align:left">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <div style="font-family:'Playfair Display',serif;font-size:16px;color:#e0c898">${esc(r.name)}</div>
+            <div style="font-size:11px;color:var(--text5)">${r.cookTime}min · ${r.difficulty}</div>
+          </div>
+          <div style="font-size:11px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">${esc(r.cuisine)}</div>
+          <div style="font-size:13px;color:#9a8a72;margin-bottom:8px;font-style:italic;line-height:1.5">${esc(r.why)}</div>
+          <div class="tags-row">${(r.keyIngredients||[]).map(i=>`<span class="tag">${esc(i)}</span>`).join("")}</div>
+        </div>`).join("")}`;
+  } catch(e) {
+    document.getElementById("ai-container").innerHTML = `<div style="color:var(--red2);padding:20px;text-align:center">Couldn't load suggestions. <button class="btn btn-ghost btn-sm" onclick="getAISuggestions()">Retry</button></div>`;
+  }
+}
+
+// ── Import Hub ────────────────────────────────────────────────────────────────
+
+function openImport() {
+  showModal(`
+    <div class="modal-title">Import Recipes</div>
+    <div class="modal-sub">Choose how you'd like to bring in recipes.</div>
+    ${[
+      {id:"text",icon:"✉️",title:"Paste Text or Upload File",badge:"AI-powered",desc:"Paste recipe text from an email, note, or doc — or drop a .txt file."},
+      {id:"url",icon:"🔗",title:"Import from URL",badge:"AI-powered",desc:"Paste a recipe URL — AI fetches and auto-fills all the details."},
+      {id:"bookmarks",icon:"📂",title:"Import Bookmarks File",badge:"Batch import",desc:"Export bookmarks from Chrome/Firefox/Safari and scan for recipe links."},
+      {id:"log",icon:"📝",title:"Quick URL Log",badge:"Fast capture",desc:"Save one or more URLs now, fill in details later."},
+      {id:"json",icon:"💾",title:"Restore from Backup",badge:"JSON backup",desc:"Re-import a previously exported .json backup file."},
+    ].map(opt=>`
+      <div class="import-opt" onclick="openImportMode('${opt.id}')">
+        <div class="import-opt-icon">${opt.icon}</div>
+        <div style="flex:1">
+          <div><span class="import-opt-title">${opt.title}</span><span class="badge">${opt.badge}</span></div>
+          <div class="import-opt-desc">${opt.desc}</div>
+        </div>
+        <div style="color:var(--text5);font-size:18px;align-self:center">›</div>
+      </div>`).join("")}
+    <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+function openImportMode(mode) {
+  if (mode==="text") showTextImport();
+  else if (mode==="url") showURLImport();
+  else if (mode==="bookmarks") showBookmarkImport();
+  else if (mode==="log") showURLLog();
+  else if (mode==="json") showJSONImport();
+}
+
+// ── Text Import ───────────────────────────────────────────────────────────────
+
+function showTextImport() {
+  showModal(`
+    <div class="modal-title">Import from Text</div>
+    <div class="modal-sub">Paste recipe text from an email, note, or document — or upload a .txt file. AI extracts the structure.</div>
+    <div style="position:relative;margin-bottom:10px">
+      <textarea id="text-input" style="width:100%;min-height:200px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:13px;outline:none;resize:vertical;font-family:inherit;line-height:1.6;box-sizing:border-box"
+        placeholder="Paste recipe text here…&#10;&#10;Example:&#10;Mom's Tomato Sauce&#10;Serves 4 | 45 minutes&#10;&#10;2 cans crushed tomatoes&#10;4 cloves garlic…"></textarea>
+      <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
+        <span style="font-size:11px;color:var(--text5);cursor:pointer;padding:3px 8px;background:var(--bg2);border-radius:6px;border:1px solid var(--border)" onclick="document.getElementById('text-input').value='';document.getElementById('text-result').innerHTML=''">Clear</span>
+        <span style="font-size:11px;color:var(--text4);cursor:pointer;padding:3px 8px;background:var(--bg2);border-radius:6px;border:1px solid var(--border)" onclick="document.getElementById('txt-file').click()">📄 Upload file</span>
+        <input type="file" id="txt-file" accept=".txt,.md,.text" style="display:none" onchange="loadTextFile(this)" />
+      </div>
+    </div>
+    <div id="text-result"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="parse-btn" onclick="parseTextRecipe()">Parse Recipe</button>
+    </div>`,true);
+}
+
+function loadTextFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById("text-input").value = e.target.result; };
+  reader.readAsText(file);
+}
+
+async function parseTextRecipe() {
+  const text = document.getElementById("text-input").value.trim();
+  if (!text) return;
+  document.getElementById("text-result").innerHTML = `<div style="text-align:center;padding:16px;color:var(--text4)"><span class="spinner">✦</span><div style="margin-top:8px">Parsing…</div></div>`;
+  document.getElementById("parse-btn").disabled = true;
+  try {
+    const res = await fetch(ANTHROPIC_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:2000,
+        system:`Parse unstructured recipe text and return ONLY valid JSON, no preamble, no markdown.
+ONE recipe: {"type":"single","recipe":{"name":"string","cuisine":"string","cookTime":number,"difficulty":"Easy|Medium|Hard","ingredients":"string (each on own line)","instructions":"string (numbered steps, each on own line)","notes":"string","tags":["string"]}}
+MULTIPLE: {"type":"multiple","recipes":[...same fields...]}
+NOT FOUND: {"type":"none","reason":"string"}
+Cuisine: American/Italian/Mexican/Asian/Middle Eastern/French/Indian/Mediterranean/Other`,
+        messages:[{role:"user",content:`Parse this recipe:\n\n${text}`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"";
+    const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    if (parsed.type==="none") throw new Error(parsed.reason||"No recipe found.");
+    window._parsedRecipes = parsed.type==="single" ? [parsed.recipe] : parsed.recipes;
+    const list = window._parsedRecipes;
+    document.getElementById("text-result").innerHTML = `
+      <div class="result-preview">
+        <div class="result-found">✓ Found ${list.length} recipe${list.length!==1?"s":""}</div>
+        ${list.map(r=>`
+          <div style="background:#0e1a0c;border-radius:8px;padding:12px 14px;border:1px solid #1e3018;margin-bottom:8px">
+            <div class="result-name">${esc(r.name)}</div>
+            <div class="result-meta">${esc(r.cuisine)} · ${r.cookTime} min · ${esc(r.difficulty)}</div>
+            ${r.ingredients?`<div style="font-size:12px;color:#7a9a72;margin-bottom:4px"><span style="color:#5a7a52">Ingredients: </span>${esc(r.ingredients.split("\n").slice(0,3).join(", "))}${r.ingredients.split("\n").length>3?"…":""}</div>`:""}
+            ${r.tags?.length?`<div class="tags-row">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
+          </div>`).join("")}
+      </div>`;
+    document.querySelector("#modal-container .modal div:last-child").insertAdjacentHTML("beforeend",
+      `<button class="btn btn-accent" onclick="addParsedRecipes()">Add ${list.length > 1 ? list.length+" Recipes" : "to Collection"} →</button>`);
+  } catch(e) {
+    document.getElementById("text-result").innerHTML = `<div style="background:#2a1510;border:1px solid var(--red);border-radius:10px;padding:14px;color:var(--red2);font-size:13px">⚠ ${esc(e.message||"Parse failed.")}</div>`;
+  }
+  document.getElementById("parse-btn").disabled = false;
+}
+
+function addParsedRecipes() {
+  const today = new Date().toISOString().split("T")[0];
+  const base = {source:"text",sourceUrl:"",rating:0,tweaks:"",useCount:0,lastUsed:"",dateAdded:today,tags:[]};
+  const newR = (window._parsedRecipes||[]).map((r,i)=>({...base,...r,id:Date.now().toString()+i}));
+  recipes.push(...newR);
+  closeModal(); renderTab(); saveRecipes();
+  showToast(`✓ Added ${newR.length} recipe${newR.length!==1?"s":""}`);
+}
+
+// ── URL Import ────────────────────────────────────────────────────────────────
+
+function showURLImport() {
+  showModal(`
+    <div class="modal-title">Import from URL</div>
+    <div class="modal-sub">Paste a recipe URL — AI fetches and auto-fills all the details.</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input id="url-input" type="text" placeholder="https://www.seriouseats.com/…"
+        style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit"
+        onkeydown="if(event.key==='Enter')fetchURLRecipe()" />
+      <button class="btn btn-primary" id="fetch-btn" onclick="fetchURLRecipe()">Fetch</button>
+    </div>
+    <div id="url-result"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+async function fetchURLRecipe() {
+  const url = document.getElementById("url-input").value.trim();
+  if (!url) return;
+  document.getElementById("url-result").innerHTML = `<div style="text-align:center;padding:16px;color:var(--text4)"><span class="spinner">✦</span><div style="margin-top:8px">Fetching recipe…</div></div>`;
+  document.getElementById("fetch-btn").disabled = true;
+  try {
+    const res = await fetch(ANTHROPIC_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:2000,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        system:`Extract recipe data from the URL. Respond ONLY with valid JSON, no markdown:
+{"name":"string","cuisine":"string","cookTime":number,"difficulty":"Easy|Medium|Hard","ingredients":"string (each on own line)","instructions":"string (numbered steps)","notes":"string","tags":["string"],"found":true}
+Or: {"found":false,"reason":"string"}`,
+        messages:[{role:"user",content:`Extract recipe from: ${url}`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"";
+    const parsed = JSON.parse(text.replace(/```json|```/g,"").trim());
+    if (!parsed.found) throw new Error(parsed.reason||"Recipe not found.");
+    window._urlRecipe = {...parsed, sourceUrl:url, source:"url", rating:0, tweaks:"", useCount:0, lastUsed:"", dateAdded:new Date().toISOString().split("T")[0], id:Date.now().toString()};
+    document.getElementById("url-result").innerHTML = `
+      <div class="result-preview">
+        <div class="result-found">✓ Recipe Found</div>
+        <div class="result-name">${esc(parsed.name)}</div>
+        <div class="result-meta">${esc(parsed.cuisine)} · ${parsed.cookTime} min · ${esc(parsed.difficulty)}</div>
+        ${parsed.ingredients?`<div style="font-size:12px;color:#7a9a72;margin-bottom:6px">${esc(parsed.ingredients.split("\n").slice(0,3).join(", "))}${parsed.ingredients.split("\n").length>3?"…":""}</div>`:""}
+        ${parsed.tags?.length?`<div class="tags-row">${parsed.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-accent" onclick="addURLRecipe()">Add to Collection →</button>
+      </div>`;
+  } catch(e) {
+    document.getElementById("url-result").innerHTML = `<div style="background:#2a1510;border:1px solid var(--red);border-radius:10px;padding:14px;color:var(--red2);font-size:13px">⚠ ${esc(e.message||"Fetch failed.")}</div>`;
+  }
+  document.getElementById("fetch-btn").disabled = false;
+}
+
+function addURLRecipe() {
+  if (!window._urlRecipe) return;
+  recipes.push(window._urlRecipe);
+  closeModal(); renderTab(); saveRecipes();
+  showToast("✓ Recipe added");
+}
+
+// ── Bookmark Import ───────────────────────────────────────────────────────────
+
+function showBookmarkImport() {
+  showModal(`
+    <div class="modal-title">Import Bookmarks</div>
+    <div class="modal-sub">Export your bookmarks as HTML from Chrome, Firefox, or Safari, then upload the file.</div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;border:1px solid var(--border);margin-bottom:16px;font-size:12px;color:var(--text4);line-height:1.8">
+      <strong style="color:var(--text3)">Chrome:</strong> Bookmarks → Bookmark manager → ⋮ → Export bookmarks<br>
+      <strong style="color:var(--text3)">Firefox:</strong> Bookmarks → Manage bookmarks → Import/Export → Export to HTML<br>
+      <strong style="color:var(--text3)">Safari:</strong> File → Export Bookmarks
+    </div>
+    <input type="file" id="bm-file" accept=".html,.htm" style="display:none" onchange="loadBookmarkFile(this)" />
+    <div id="bm-content">
+      <div class="drop-zone" onclick="document.getElementById('bm-file').click()">
+        <div style="font-size:32px;margin-bottom:8px">📂</div>
+        <div style="font-size:14px;margin-bottom:4px">Click to upload bookmarks HTML file</div>
+        <div style="font-size:12px;color:var(--text5)">Exported from Chrome, Firefox, or Safari</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+function loadBookmarkFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const doc = new DOMParser().parseFromString(e.target.result, "text/html");
+    const links = Array.from(doc.querySelectorAll("a"))
+      .map(a=>({url:a.href,title:a.textContent.trim()}))
+      .filter(b=>{
+        if (!b.url.startsWith("http")) return false;
+        const text = (b.url+" "+b.title).toLowerCase();
+        return RECIPE_KEYWORDS.some(k=>text.includes(k));
+      }).slice(0,100);
+    window._bookmarks = links;
+    window._bmSelected = new Set(links.map((_,i)=>i));
+    renderBookmarkList();
+  };
+  reader.readAsText(file);
+}
+
+function renderBookmarkList() {
+  const links = window._bookmarks||[];
+  document.getElementById("bm-content").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:13px;color:#8a7a6a">Found <strong style="color:var(--accent3)">${links.length}</strong> recipe links</div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleAllBM()">${window._bmSelected.size===links.length?"Deselect all":"Select all"}</button>
+    </div>
+    <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
+      ${links.length===0
+        ? `<div style="padding:20px;text-align:center;color:var(--text5);font-size:13px">No recipe bookmarks found. Try URL import instead.</div>`
+        : links.map((b,i)=>`
+          <div class="bookmark-item${window._bmSelected.has(i)?" selected":""}" onclick="toggleBM(${i})">
+            <div class="bm-check${window._bmSelected.has(i)?" on":""}">${window._bmSelected.has(i)?"✓":""}</div>
+            <div style="flex:1;min-width:0">
+              <div class="bm-title">${esc(b.title||"Untitled")}</div>
+              <div class="bm-url">${esc(b.url)}</div>
+            </div>
+          </div>`).join("")}
+    </div>
+    ${window._bmSelected.size>0?`<div style="display:flex;justify-content:flex-end"><button class="btn btn-accent" onclick="importBookmarks()">Import ${window._bmSelected.size} Recipe${window._bmSelected.size!==1?"s":""} →</button></div>`:""}`;
+}
+
+function toggleBM(i) {
+  if (window._bmSelected.has(i)) window._bmSelected.delete(i);
+  else window._bmSelected.add(i);
+  renderBookmarkList();
+}
+
+function toggleAllBM() {
+  const links = window._bookmarks||[];
+  window._bmSelected = window._bmSelected.size===links.length ? new Set() : new Set(links.map((_,i)=>i));
+  renderBookmarkList();
+}
+
+async function importBookmarks() {
+  const links = (window._bookmarks||[]).filter((_,i)=>window._bmSelected.has(i));
+  document.getElementById("bm-content").innerHTML = `
+    <div style="text-align:center;padding:30px 20px">
+      <span class="spinner" style="font-size:22px">✦</span>
+      <div id="bm-progress-text" style="color:var(--accent3);margin:12px 0">Importing… 0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="bm-bar" style="width:0%"></div></div>
+      <div style="font-size:12px;color:var(--text5);margin-top:8px">This may take a moment</div>
+    </div>`;
+  const results = [];
+  for (let i=0; i<links.length; i++) {
+    const pct = Math.round(((i+1)/links.length)*100);
+    document.getElementById("bm-progress-text").textContent = `Importing… ${pct}%`;
+    document.getElementById("bm-bar").style.width = pct+"%";
+    try {
+      const res = await fetch(ANTHROPIC_URL, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model:"claude-sonnet-4-20250514", max_tokens:1500,
+          tools:[{type:"web_search_20250305",name:"web_search"}],
+          system:`Extract recipe. JSON only, no markdown:
+{"name":"string","cuisine":"string","cookTime":number,"difficulty":"Easy|Medium|Hard","ingredients":"string","instructions":"string","notes":"string","tags":["string"],"found":true}
+Or: {"found":false}`,
+          messages:[{role:"user",content:`Extract recipe from: ${links[i].url} (title: ${links[i].title})`}]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.filter(x=>x.type==="text").map(x=>x.text).join("")||"";
+      const parsed = JSON.parse(text.replace(/```json|```/g,"").trim());
+      if (parsed.found) results.push({...parsed, sourceUrl:links[i].url, source:"url", rating:0, tweaks:"", useCount:0, lastUsed:"", dateAdded:new Date().toISOString().split("T")[0], id:Date.now().toString()+i});
+    } catch{}
+    await new Promise(r=>setTimeout(r,400));
+  }
+  recipes.push(...results);
+  closeModal(); renderTab(); saveRecipes();
+  showToast(`✓ Added ${results.length} recipe${results.length!==1?"s":""}`);
+}
+
+// ── URL Log ───────────────────────────────────────────────────────────────────
+
+function showURLLog() {
+  showModal(`
+    <div class="modal-title">Quick URL Log</div>
+    <div class="modal-sub">Paste recipe URLs to save now, fill in details later.</div>
+    <div id="url-log-rows"></div>
+    <button class="btn btn-ghost btn-sm" style="margin-bottom:16px" onclick="addURLLogRow()">+ Add another URL</button>
+    <div style="font-size:12px;color:var(--text5);margin-bottom:16px;font-style:italic">Recipes are saved as placeholders — click any card later to add full details.</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-log-btn" onclick="saveURLLog()">Save URLs</button>
+    </div>`,true);
+  window._urlLogRows = [{url:"",title:""}];
+  renderURLLogRows();
+}
+
+function renderURLLogRows() {
+  document.getElementById("url-log-rows").innerHTML =
+    window._urlLogRows.map((r,i)=>`
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input type="text" value="${esc(r.url)}" placeholder="https://…" oninput="window._urlLogRows[${i}].url=this.value"
+          style="flex:2;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:inherit" />
+        <input type="text" value="${esc(r.title)}" placeholder="Title (optional)" oninput="window._urlLogRows[${i}].title=this.value"
+          style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:inherit" />
+        ${window._urlLogRows.length>1?`<span style="cursor:pointer;color:var(--text5);font-size:20px;padding:0 4px" onclick="removeURLLogRow(${i})">×</span>`:""}
+      </div>`).join("");
+}
+
+function addURLLogRow() { window._urlLogRows.push({url:"",title:""}); renderURLLogRows(); }
+function removeURLLogRow(i) { window._urlLogRows.splice(i,1); renderURLLogRows(); }
+
+function saveURLLog() {
+  const valid = window._urlLogRows.filter(r=>r.url.trim().startsWith("http"));
+  if (!valid.length) return;
+  const today = new Date().toISOString().split("T")[0];
+  valid.forEach((r,i) => {
+    let hostname = r.url;
+    try { hostname = new URL(r.url).hostname.replace("www.",""); } catch{}
+    recipes.push({
+      id: Date.now().toString()+i, name: r.title.trim()||hostname,
+      cuisine:"Other", cookTime:30, difficulty:"Easy", rating:0,
+      ingredients:"", instructions:"", notes:"", tweaks:"",
+      source:"url", sourceUrl:r.url.trim(), lastUsed:"", useCount:0,
+      tags:[], dateAdded:today
+    });
+  });
+  closeModal(); renderTab(); saveRecipes();
+  showToast(`✓ Saved ${valid.length} URL${valid.length!==1?"s":""}`);
+}
+
+// ── JSON Backup Restore ───────────────────────────────────────────────────────
+
+function showJSONImport() {
+  showModal(`
+    <div class="modal-title">Restore from Backup</div>
+    <div class="modal-sub">Upload a previously exported <code style="color:#a09070;background:var(--bg3);padding:1px 6px;border-radius:4px">.json</code> backup file.</div>
+    <input type="file" id="json-file" accept=".json" style="display:none" onchange="loadJSONBackup(this)" />
+    <div id="json-err"></div>
+    <div class="drop-zone" onclick="document.getElementById('json-file').click()">
+      <div style="font-size:32px;margin-bottom:8px">💾</div>
+      <div style="font-size:14px;margin-bottom:4px">Click to upload backup file</div>
+      <div style="font-size:12px;color:var(--text5)">mise-en-place-recipes-YYYY-MM-DD.json</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+function loadJSONBackup(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const imported = Array.isArray(data) ? data : data.recipes;
+      if (!Array.isArray(imported)||!imported.length) throw new Error("No recipes found.");
+      recipes.push(...imported.map((r,i)=>({...r,id:r.id||(Date.now().toString()+i)})));
+      closeModal(); renderTab(); saveRecipes();
+      showToast(`✓ Restored ${imported.length} recipes`);
+    } catch(e) {
+      document.getElementById("json-err").innerHTML = `<div style="background:#2a1510;border:1px solid var(--red);border-radius:10px;padding:12px;color:var(--red2);font-size:13px;margin-bottom:12px">⚠ ${esc(e.message)}</div>`;
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+
+function exportJSON() {
+  const data = JSON.stringify({exported:new Date().toISOString(),count:recipes.length,recipes},null,2);
+  const blob = new Blob([data],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download=`mise-en-place-recipes-${new Date().toISOString().split("T")[0]}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`✓ Exported ${recipes.length} recipes`);
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+
+function showModal(html, wide) {
+  const container = document.getElementById("modal-container");
+  container.innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal${wide?" wide":""}" style="${wide?"max-width:700px":""}" onclick="event.stopPropagation()">
+        ${html}
+      </div>
+    </div>`;
+}
+
+function closeModal() {
+  document.getElementById("modal-container").innerHTML = "";
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function esc(str) {
+  if (str == null) return "";
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+loadRecipes();
+</script>
+</body>
+</html>
